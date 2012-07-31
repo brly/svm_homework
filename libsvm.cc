@@ -18,11 +18,12 @@ void print_null(const char* s) {}
 
 };
 
-Libsvm::Libsvm(const int kernel_type, const bool problem_init_auto) {
+Libsvm::Libsvm(const int kernel_type, const double error,
+               const bool problem_init_auto) {
   srand(static_cast<unsigned>(time(NULL)));
   init_param(kernel_type);
   if (problem_init_auto)
-    init_problem();
+    init_problem(error);
   svm_set_print_string_function(&::print_null);
 }
 
@@ -55,7 +56,7 @@ void Libsvm::init_param(const int kernel_type) {
   param.weight = NULL;
 }
 
-void Libsvm::init_problem() {
+void Libsvm::init_problem(const double error) {
   // set num of samples
   const int kL = 500;
   problem.l = kL;
@@ -65,7 +66,7 @@ void Libsvm::init_problem() {
   for (int i = 0; i < kL; ++i) {
     double x = static_cast<double>(rand()) / RAND_MAX * 4.0 * M_PI;
     double y = sin(x);
-    double d = static_cast<double>(rand()) / RAND_MAX / 2;
+    double d = static_cast<double>(rand()) / RAND_MAX / error;
     if (static_cast<double>(rand())/ RAND_MAX < 0.5) d *= -1;
 
     problem.x[i] = new svm_node[3];
@@ -132,7 +133,6 @@ void Libsvm::run() {
   // negative
   for (unsigned i = 0; i < neg.size(); ++i)
     printf("%f %f\n", neg[i].first, neg[i].second);
-  puts("\n");
 
   // release
   svm_free_and_destroy_model(&model);
